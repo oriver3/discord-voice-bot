@@ -16,10 +16,21 @@ client = discord.Client()
 
 url_patter = re.compile(r'(http[s]?://[^/]+/)(\S+)')
 
-def text_to_speech(text):
+def text_to_speech(text:str, is_bot:bool=False) -> str:
     try:
+        now = datetime.datetime.now()
+        now_str = now.strftime('%Y%m%d-%H%M%S')
+        if is_bot:
+            voice_name = 'ja-JP-Standard-A'
+            postfix_list = ['']
+            fname_text = './' + work_dir + '/bot-text-' + now_str + '.txt'
+            fname_voice = './' + work_dir + '/bot-speech-' + now_str + '.mp3'
+        else:
+            voice_name = 'ja-JP-Standard-B'
+            postfix_list = ['にゃ', 'でござる', 'どすぇ', 'ずら', 'だす', 'でげす', 'そす']
+            fname_text = './' + work_dir + '/text-' + now_str + '.txt'
+            fname_voice = './' + work_dir + '/speech-' + now_str + '.mp3'
         text_mod = url_patter.sub(r'\1 ', text)
-        postfix_list = ['にゃ', 'でござる', 'どすぇ', 'ずら', 'だす', 'でげす', 'そす']
         text_mod = text_mod + random.choice(postfix_list)
         client = texttospeech.TextToSpeechClient()
         synthesis_input = texttospeech.SynthesisInput(text=text_mod)
@@ -27,7 +38,7 @@ def text_to_speech(text):
             # language_code="en-US", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
             language_code="ja-JP",
             # ssml_gender=texttospeech.SsmlVoiceGender.FEMALE, # NEUTRAL
-            name='ja-JP-Standard-B'
+            name=voice_name
         )
         audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3,
@@ -36,15 +47,11 @@ def text_to_speech(text):
         response = client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config
         )
-        now = datetime.datetime.now()
-        now_str = now.strftime('%Y%m%d-%H%M%S')
-        fname = './' + work_dir + '/text-' + now_str + '.txt'
-        with open(fname, 'w') as out:
+        with open(fname_text, 'w') as out:
             out.write(text)
-        fname = './' + work_dir + '/speech-' + now_str + '.mp3'
-        with open(fname, 'wb') as out:
+        with open(fname_voice, 'wb') as out:
             out.write(response.audio_content)
-        return fname
+        return fname_voice
     except Exception as e:
         print(datetime.datetime.now())
         print(e)
@@ -54,11 +61,11 @@ def text_to_speech(text):
 @client.event
 async def on_ready():
     # 起動したらターミナルにログイン通知が表示される
-    print('ログインしました')
+    print('ログインしました ' + str(datetime.datetime.now()))
 
 # メッセージ受信時に動作する処理
 @client.event
-async def on_message(message):
+async def on_message(message: discord.message.Message):
     # メッセージ送信者がBotだった場合は無視する
     if message.author.bot:
         return
