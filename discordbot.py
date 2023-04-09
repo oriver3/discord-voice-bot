@@ -90,6 +90,26 @@ async def on_message(message: discord.message.Message):
             await message.guild.voice_client.disconnect()
     # elif message.author.voice is None:
     #     print('ボイスチャンネルに接続していません。')
+    elif message.content.startswith('オリバー'): # == 'ボット応答始め':
+        response = requests.post('https://api-mebo.dev/api', json={
+            'api_key': secret['miibo']['api_key'],
+            'agent_id': secret['miibo']['agent'],
+            'utterance': message.content[5:],
+            'uid': str(message.guild.id)
+        })
+        if response.ok:
+            res_json = response.json()
+            if res_json and res_json["bestResponse"] and res_json["bestResponse"]["utterance"]:
+                await message.channel.send(res_json["bestResponse"]["utterance"])
+                if message.guild.voice_client:
+                    fname = text_to_speech(res_json["bestResponse"]["utterance"], is_bot=True)
+                    if fname != None:
+                        message.guild.voice_client.play(discord.FFmpegPCMAudio(fname))
+            else:
+                await message.channel.send('...')
+        else:
+            print(f'miibo respond error with code {response.status_code}.')
+            await message.channel.send('応答がない。ただの屍のようだ。')
     elif message.guild.voice_client:
         # print('ボイスチャンネルに接続します。', message.author.voice.channel)
         # await message.author.voice.channel.connect()
