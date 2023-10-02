@@ -101,10 +101,10 @@ async def on_message(message: discord.message.Message):
             res_json = response.json()
             if res_json and res_json["bestResponse"] and res_json["bestResponse"]["utterance"]:
                 await message.channel.send(res_json["bestResponse"]["utterance"])
-                if message.guild.voice_client:
-                    fname = text_to_speech(res_json["bestResponse"]["utterance"], is_bot=True)
-                    if fname != None:
-                        message.guild.voice_client.play(discord.FFmpegPCMAudio(fname))
+                # if message.guild.voice_client:
+                #     fname = text_to_speech(res_json["bestResponse"]["utterance"], is_bot=True)
+                #     if fname != None:
+                #         message.guild.voice_client.play(discord.FFmpegPCMAudio(fname))
             else:
                 await message.channel.send('...')
         else:
